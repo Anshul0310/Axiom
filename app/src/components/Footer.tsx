@@ -42,7 +42,7 @@ export default function Footer() {
 
         <div className={styles.bottom}>
           <p className={styles.copy}>
-            © 2026 Axiom. Built for Solana Frontier Colosseum.
+            © 2026 Axiom. All rights reserved.
           </p>
           <p className={styles.chain}>
             <span className={styles.chainDot} /> Solana Devnet

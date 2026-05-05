@@ -31,7 +31,7 @@ export default function HeroSection() {
       <div className={`container ${styles.heroContent}`}>
         <div className={styles.badge}>
           <span className={styles.badgeDot} />
-          Built for Solana Frontier Colosseum
+          Live on Solana Devnet
         </div>
 
         <h1 className={styles.title}>
