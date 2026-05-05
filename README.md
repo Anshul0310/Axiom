@@ -80,4 +80,3 @@ To prevent nodes from cheating or simply copying results:
 This project was built from the ground up for the **Solana Frontier Colosseum** hackathon. 
 
 ---
-*Built with ❤️ for the decentralized future.*
