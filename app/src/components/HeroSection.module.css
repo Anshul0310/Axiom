@@ -1,0 +1,94 @@
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding-top: 80px;
+}
+
+.orbTopRight {
+  top: -200px;
+  right: -200px;
+  animation: float 8s ease-in-out infinite;
+}
+
+.orbBottomLeft {
+  bottom: -100px;
+  left: -200px;
+  animation: float 10s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+.heroContent {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  color: #a78bfa;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: var(--space-8);
+  letter-spacing: 0.02em;
+}
+
+.badgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a78bfa;
+}
+
+.title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 900;
+  line-height: 1.1;
+  max-width: 800px;
+  margin-bottom: var(--space-6);
+  letter-spacing: -0.03em;
+}
+
+.titleGradient {
+  background: linear-gradient(135deg, #fff 0%, var(--sol-cyan) 50%, var(--sol-violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cursor {
+  -webkit-text-fill-color: var(--sol-cyan);
+  animation: blink-cursor 1s infinite;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 650px;
+  margin-bottom: var(--space-10);
+  line-height: 1.7;
+}
+
+.highlight {
+  color: var(--sol-cyan);
+}
+
+.ctas {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-16);
+}
+
+/* Terminal Preview */
+

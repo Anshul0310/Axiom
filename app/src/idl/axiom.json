@@ -1,0 +1,220 @@
+{
+  "version": "0.1.0",
+  "name": "axiom",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        { "name": "platformConfig", "isMut": true, "isSigner": false },
+        { "name": "admin", "isMut": true, "isSigner": true },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": "InitializeParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "registerNode",
+      "accounts": [
+        { "name": "nodeRegistry", "isMut": true, "isSigner": false },
+        { "name": "platformConfig", "isMut": true, "isSigner": false },
+        { "name": "stakeDeposit", "isMut": false, "isSigner": false },
+        { "name": "operator", "isMut": true, "isSigner": true },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        {
+          "name": "modelsSupported",
+          "type": { "vec": { "array": ["u8", 32] } }
+        }
+      ]
+    },
+    {
+      "name": "postJob",
+      "accounts": [
+        { "name": "job", "isMut": true, "isSigner": false },
+        { "name": "platformConfig", "isMut": true, "isSigner": false },
+        { "name": "client", "isMut": true, "isSigner": true },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "jobId", "type": "u64" },
+        { "name": "modelId", "type": { "array": ["u8", 32] } },
+        { "name": "inputCid", "type": { "array": ["u8", 32] } },
+        { "name": "bountyLamports", "type": "u64" },
+        { "name": "deadline", "type": "i64" }
+      ]
+    },
+    {
+      "name": "commitResult",
+      "accounts": [
+        { "name": "job", "isMut": true, "isSigner": false },
+        { "name": "nodeRegistry", "isMut": false, "isSigner": false },
+        { "name": "operator", "isMut": false, "isSigner": true }
+      ],
+      "args": [
+        { "name": "commitHash", "type": { "array": ["u8", 32] } }
+      ]
+    },
+    {
+      "name": "revealResult",
+      "accounts": [
+        { "name": "job", "isMut": true, "isSigner": false },
+        { "name": "operator", "isMut": false, "isSigner": true }
+      ],
+      "args": [
+        { "name": "outputCid", "type": { "array": ["u8", 32] } },
+        { "name": "secret", "type": { "array": ["u8", 32] } }
+      ]
+    },
+    {
+      "name": "settleJob",
+      "accounts": [
+        { "name": "job", "isMut": true, "isSigner": false },
+        { "name": "nodeRegistry", "isMut": true, "isSigner": false },
+        { "name": "platformConfig", "isMut": false, "isSigner": false },
+        { "name": "nodeOperator", "isMut": true, "isSigner": false },
+        { "name": "admin", "isMut": true, "isSigner": false },
+        { "name": "caller", "isMut": false, "isSigner": true },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelJob",
+      "accounts": [
+        { "name": "job", "isMut": true, "isSigner": false },
+        { "name": "client", "isMut": true, "isSigner": true }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Job",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "client", "type": "publicKey" },
+          { "name": "jobId", "type": "u64" },
+          { "name": "modelId", "type": { "array": ["u8", 32] } },
+          { "name": "inputCid", "type": { "array": ["u8", 32] } },
+          { "name": "bountyLamports", "type": "u64" },
+          { "name": "status", "type": { "defined": "JobStatus" } },
+          { "name": "nodeOperator", "type": "publicKey" },
+          { "name": "commitHash", "type": { "array": ["u8", 32] } },
+          { "name": "outputCid", "type": { "array": ["u8", 32] } },
+          { "name": "secret", "type": { "array": ["u8", 32] } },
+          { "name": "deadline", "type": "i64" },
+          { "name": "createdAt", "type": "i64" },
+          { "name": "isVerificationTarget", "type": "bool" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "NodeRegistry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "operator", "type": "publicKey" },
+          { "name": "stakeAmount", "type": "u64" },
+          { "name": "modelsSupported", "type": { "vec": { "array": ["u8", 32] } } },
+          { "name": "jobsCompleted", "type": "u64" },
+          { "name": "jobsFailed", "type": "u64" },
+          { "name": "reputation", "type": "u16" },
+          { "name": "status", "type": { "defined": "NodeStatus" } },
+          { "name": "registeredAt", "type": "i64" },
+          { "name": "totalEarned", "type": "u64" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "PlatformConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "admin", "type": "publicKey" },
+          { "name": "minStake", "type": "u64" },
+          { "name": "platformFeeBps", "type": "u16" },
+          { "name": "verificationRateBps", "type": "u16" },
+          { "name": "slashPenaltyBps", "type": "u16" },
+          { "name": "totalJobs", "type": "u64" },
+          { "name": "totalVolume", "type": "u64" },
+          { "name": "totalNodes", "type": "u64" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "InitializeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "minStake", "type": "u64" },
+          { "name": "platformFeeBps", "type": "u16" },
+          { "name": "verificationRateBps", "type": "u16" },
+          { "name": "slashPenaltyBps", "type": "u16" }
+        ]
+      }
+    },
+    {
+      "name": "JobStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "Open" },
+          { "name": "Committed" },
+          { "name": "Revealed" },
+          { "name": "Settled" },
+          { "name": "Disputed" },
+          { "name": "Expired" }
+        ]
+      }
+    },
+    {
+      "name": "NodeStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "Active" },
+          { "name": "Slashed" },
+          { "name": "Inactive" }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "JobNotOpen", "msg": "Job is not in the Open state" },
+    { "code": 6001, "name": "JobExpired", "msg": "Job has expired past its deadline" },
+    { "code": 6002, "name": "JobNotCommitted", "msg": "Job is not in the Committed state" },
+    { "code": 6003, "name": "JobNotRevealed", "msg": "Job is not in the Revealed state" },
+    { "code": 6004, "name": "DeadlineNotPassed", "msg": "Job deadline has not passed yet" },
+    { "code": 6005, "name": "AlreadyCommitted", "msg": "A node has already committed to this job" },
+    { "code": 6006, "name": "InvalidBounty", "msg": "Invalid bounty amount" },
+    { "code": 6007, "name": "InvalidDeadline", "msg": "Deadline must be in the future" },
+    { "code": 6008, "name": "InsufficientStake", "msg": "Insufficient stake" },
+    { "code": 6009, "name": "NodeNotActive", "msg": "Node is not active" },
+    { "code": 6010, "name": "UnsupportedModel", "msg": "Node does not support the requested model" },
+    { "code": 6011, "name": "UnauthorizedNode", "msg": "Unauthorized node" },
+    { "code": 6012, "name": "AlreadyRegistered", "msg": "Node is already registered" },
+    { "code": 6013, "name": "InvalidCommitHash", "msg": "Invalid commit hash" },
+    { "code": 6014, "name": "InvalidRevealData", "msg": "Reveal data is empty or invalid" },
+    { "code": 6015, "name": "VerificationFailed", "msg": "Verification failed" },
+    { "code": 6016, "name": "NotVerificationTarget", "msg": "Not selected for verification" },
+    { "code": 6017, "name": "UnauthorizedAdmin", "msg": "Unauthorized admin" },
+    { "code": 6018, "name": "UnauthorizedClient", "msg": "Unauthorized client" },
+    { "code": 6019, "name": "ArithmeticOverflow", "msg": "Arithmetic overflow" }
+  ],
+  "metadata": {
+    "address": "G1DD7C4pqE59RqM8gAr4yjBBNj9DZ5XHyDRCsvFv7UP5"
+  }
+}

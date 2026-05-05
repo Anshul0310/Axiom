@@ -1,0 +1,201 @@
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  perspective: 1000px;
+}
+
+.glow {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.4), transparent 70%);
+  filter: blur(40px);
+  z-index: 0;
+  animation: pulseGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { opacity: 0.5; transform: scale(0.95); }
+  100% { opacity: 0.8; transform: scale(1.05); }
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  transform: rotateY(-5deg) rotateX(5deg);
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: rotateY(0deg) rotateX(0deg) translateY(-5px);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.pulseCyan {
+  background: var(--sol-cyan);
+  box-shadow: 0 0 10px var(--sol-cyan);
+  animation: pulseCyanAnim 1.5s infinite;
+}
+
+.pulseGreen {
+  background: var(--sol-green);
+  box-shadow: 0 0 10px var(--sol-green);
+}
+
+@keyframes pulseCyanAnim {
+  0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 212, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
+}
+
+.statusText {
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.nodeBadge {
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  color: #a78bfa;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon {
+  font-size: 10px;
+}
+
+.progressBarWrapper {
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-bottom: var(--space-6);
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sol-cyan), var(--sol-violet));
+  transition: width 0.1s linear;
+}
+
+.content {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.prompt {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: var(--space-4);
+}
+
+.promptLabel {
+  color: var(--sol-violet);
+  font-weight: 600;
+  margin-right: var(--space-2);
+}
+
+.outputBox {
+  min-height: 80px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.token {
+  color: #e2e8f0;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.blinkingCursor {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  background: var(--sol-cyan);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: var(--space-4);
+}
+
+.hash {
+  color: var(--sol-green);
+  opacity: 0.8;
+}
+
+.cost {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sol {
+  color: var(--text-primary);
+  font-weight: 600;
+}

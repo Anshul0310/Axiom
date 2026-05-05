@@ -1,0 +1,692 @@
+.page {
+  display: flex;
+  min-height: 100vh;
+  padding-top: 72px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  border-right: 1px solid var(--border-subtle);
+  background: rgba(5, 5, 16, 0.95);
+  backdrop-filter: blur(20px);
+  padding: var(--space-6);
+  position: sticky;
+  top: 72px;
+  max-height: calc(100vh - 72px);
+  overflow-y: auto;
+}
+
+.sidebarHeader {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sidebarTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: var(--space-1);
+}
+
+.version {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  background: var(--sol-violet-dim);
+  border-radius: var(--radius-full);
+}
+
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  width: 100%;
+}
+
+.sidebarLink:hover {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.sidebarLinkActive {
+  background: var(--sol-cyan-dim) !important;
+  color: var(--sol-cyan) !important;
+  font-weight: 600;
+  border-left: 3px solid var(--sol-cyan);
+}
+
+.sidebarIcon {
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* ─── Content ───────────────────────────────────────────────────────────── */
+.content {
+  flex: 1;
+  padding: var(--space-10) var(--space-12);
+  max-width: 900px;
+  overflow-y: auto;
+  max-height: calc(100vh - 72px);
+}
+
+.docSection {
+  animation: fadeIn 0.3s var(--ease-out-expo);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.docTitle {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-4);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.docLead {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: var(--space-10);
+  max-width: 700px;
+}
+
+.docH2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-top: var(--space-12);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  letter-spacing: -0.01em;
+}
+
+.docText {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: var(--space-6);
+}
+
+/* ─── Highlight Box ─────────────────────────────────────────────────────── */
+.highlightBox {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  background: var(--sol-cyan-dim);
+  border: 1px solid var(--border-cyan);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-8);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.highlightIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ─── Solution Grid ─────────────────────────────────────────────────────── */
+.solutionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.solutionCard {
+  padding: var(--space-6);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+}
+
+.solutionCard:hover {
+  border-color: var(--border-medium);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.solutionEmoji {
+  font-size: 1.8rem;
+  display: block;
+  margin-bottom: var(--space-3);
+}
+
+.solutionCard h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.solutionCard p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ─── Participants ──────────────────────────────────────────────────────── */
+.participantsTable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.participantRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.participantRole {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.roleEmoji {
+  font-size: 1.2rem;
+}
+
+.participantRow p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ─── Architecture Flow ─────────────────────────────────────────────────── */
+.architectureFlow {
+  margin: var(--space-8) 0;
+}
+
+.flowStep {
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+}
+
+.flowDot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  color: #000;
+}
+
+.flowDotCyan { background: var(--sol-cyan); box-shadow: 0 0 16px rgba(0, 212, 255, 0.3); }
+.flowDotViolet { background: #a78bfa; box-shadow: 0 0 16px rgba(124, 58, 237, 0.3); }
+.flowDotGold { background: var(--sol-gold); box-shadow: 0 0 16px rgba(255, 215, 0, 0.3); }
+.flowDotOrange { background: var(--sol-orange); box-shadow: 0 0 16px rgba(255, 107, 53, 0.3); }
+.flowDotGreen { background: var(--sol-green); box-shadow: 0 0 16px rgba(0, 245, 160, 0.3); }
+
+.flowContent {
+  flex: 1;
+  padding-bottom: var(--space-4);
+}
+
+.flowContent h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.flowContent p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-3);
+}
+
+.flowContent code {
+  background: rgba(0, 212, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--sol-cyan);
+}
+
+.flowDetail {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.flowTag {
+  font-size: 0.7rem;
+  padding: 2px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.flowConnector {
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(180deg, var(--border-medium), transparent);
+  margin-left: 17px;
+}
+
+/* ─── Code Block ────────────────────────────────────────────────────────── */
+.codeBlock {
+  margin: var(--space-6) 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.codeHeader {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.codeBody {
+  padding: var(--space-5);
+  background: rgba(10, 10, 30, 0.8);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0;
+}
+
+/* ─── API Table ─────────────────────────────────────────────────────────── */
+.apiTable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-6) 0;
+}
+
+.apiRow {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.apiRow:hover {
+  border-color: var(--border-medium);
+}
+
+.apiMethod {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--sol-cyan);
+  font-weight: 600;
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.apiRow p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ─── Instructions List ─────────────────────────────────────────────────── */
+.instructionsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-6) 0;
+}
+
+.instructionCard {
+  padding: var(--space-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.instructionCard:hover {
+  border-color: var(--border-medium);
+}
+
+.instructionHeader {
+  margin-bottom: var(--space-2);
+}
+
+.instructionName {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--sol-green);
+  font-weight: 700;
+}
+
+.instructionDesc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--space-3);
+}
+
+.instructionAccounts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.accountsLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.accountsList {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ─── Fee Table ─────────────────────────────────────────────────────────── */
+.feeTable {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: var(--space-6) 0;
+}
+
+.feeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.feeRow:last-child { border-bottom: none; }
+.feeRow:nth-child(odd) { background: rgba(0, 0, 0, 0.15); }
+
+.feeLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.feeValue {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--sol-cyan);
+}
+
+/* ─── Math Box ──────────────────────────────────────────────────────────── */
+.mathBox {
+  padding: var(--space-6);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  margin: var(--space-6) 0;
+}
+
+.mathBox h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: var(--space-4);
+}
+
+.mathContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mathContent p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.mathContent code {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--sol-cyan);
+}
+
+.mathConclusion {
+  padding: var(--space-4);
+  background: var(--sol-green-dim);
+  border: 1px solid rgba(0, 245, 160, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--sol-green) !important;
+  font-size: 0.9rem !important;
+}
+
+/* ─── Reputation Table ──────────────────────────────────────────────────── */
+.repTable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-6) 0;
+}
+
+.repRow {
+  display: grid;
+  grid-template-columns: 80px 100px 1fr;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.repScore {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--sol-cyan);
+}
+
+.repTier {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.repEffect {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* ─── Roadmap ───────────────────────────────────────────────────────────── */
+.roadmapTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin: var(--space-8) 0;
+}
+
+.roadmapPhase {
+  padding: var(--space-6);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+}
+
+.phaseCurrent {
+  border-color: var(--border-cyan);
+  box-shadow: var(--shadow-glow-cyan);
+}
+
+.phaseUpcoming {
+  border-color: rgba(255, 215, 0, 0.15);
+}
+
+.phaseFuture {
+  opacity: 0.7;
+}
+
+.phaseFuture:hover {
+  opacity: 1;
+}
+
+.roadmapHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.roadmapDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sol-cyan);
+  flex-shrink: 0;
+}
+
+.phaseCurrent .roadmapDot {
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+}
+
+.phaseUpcoming .roadmapDot {
+  background: var(--sol-gold);
+}
+
+.phaseFuture .roadmapDot {
+  background: var(--text-muted);
+}
+
+.roadmapTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.roadmapDate {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.roadmapHeader .badge {
+  margin-left: auto;
+}
+
+.roadmapItems {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.roadmapItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  padding: var(--space-2) 0;
+}
+
+.roadmapCheck {
+  color: var(--sol-cyan);
+  font-size: 0.7rem;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.phaseFuture .roadmapCheck {
+  color: var(--text-muted);
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .page {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    max-height: none;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .sidebarNav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .sidebarLink {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+    text-align: center;
+  }
+  .sidebarLinkActive {
+    border-left: none;
+    border-bottom: 3px solid var(--sol-cyan);
+  }
+  .content {
+    padding: var(--space-6) var(--space-4);
+    max-height: none;
+  }
+  .solutionGrid {
+    grid-template-columns: 1fr;
+  }
+  .repRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+}

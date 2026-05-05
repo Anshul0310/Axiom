@@ -1,0 +1,110 @@
+.section {
+  overflow: hidden;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: var(--space-16);
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sol-cyan);
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-4);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.step {
+  display: flex;
+  gap: var(--space-6);
+}
+
+.stepLine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 24px;
+}
+
+.stepDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 3px solid;
+  z-index: 1;
+}
+
+.dotcyan { border-color: var(--sol-cyan); background: var(--sol-cyan-dim); }
+.dotviolet { border-color: var(--sol-violet); background: var(--sol-violet-dim); }
+.dotgold { border-color: var(--sol-gold); background: rgba(255, 215, 0, 0.15); }
+.dotorange { border-color: var(--sol-orange); background: rgba(255, 107, 53, 0.15); }
+.dotgreen { border-color: var(--sol-green); background: var(--sol-green-dim); }
+
+.connector {
+  width: 2px;
+  flex: 1;
+  background: linear-gradient(180deg, var(--border-medium) 0%, transparent 100%);
+  min-height: 20px;
+}
+
+.stepCard {
+  flex: 1;
+  padding: var(--space-6);
+  margin-bottom: var(--space-4);
+  position: relative;
+}
+
+.stepNum {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.stepIcon {
+  font-size: 1.8rem;
+  margin-bottom: var(--space-3);
+}
+
+.stepTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.01em;
+}
+
+.stepDesc {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}

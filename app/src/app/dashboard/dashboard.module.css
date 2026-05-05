@@ -1,0 +1,646 @@
+.page {
+  padding-top: 100px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  padding-bottom: var(--space-20);
+}
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-8);
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-2);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.networkBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--sol-green);
+}
+
+/* ─── Tabs ───────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-8);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0;
+}
+
+.tab {
+  padding: var(--space-3) var(--space-5);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tab:hover {
+  color: var(--text-secondary);
+}
+
+.tabActive {
+  color: var(--sol-cyan);
+  border-bottom-color: var(--sol-cyan);
+}
+
+/* ─── Content ───────────────────────────────────────────────────────────── */
+.content {
+  animation: fadeIn 0.3s var(--ease-out-expo);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sectionTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+
+.sectionSubtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: var(--space-6);
+}
+
+/* ─── Global Stats ──────────────────────────────────────────────────────── */
+.globalStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-10);
+}
+
+.globalStat {
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.globalStatIcon {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-2);
+}
+
+.globalStatValue {
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-1);
+}
+
+.globalStatLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Node Cards ────────────────────────────────────────────────────────── */
+.nodesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: var(--space-6);
+}
+
+.nodeCard {
+  padding: var(--space-6);
+}
+
+.nodeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-5);
+}
+
+.nodeIdentity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.statusActive { background: var(--sol-green); box-shadow: 0 0 8px rgba(0, 245, 160, 0.5); }
+.statusIdle { background: var(--sol-gold); box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+.statusOffline { background: var(--sol-red); }
+
+.nodeName {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.nodeStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
+}
+
+.nodeStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nodeStatLabel {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.nodeStatValue {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--sol-cyan);
+}
+
+.nodeDetails {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.nodeDetail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nodeDetail:last-child { border-bottom: none; }
+
+.nodeModels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.nodeModelsLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.modelTag {
+  padding: 2px 8px;
+  background: var(--sol-violet-dim);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #a78bfa;
+}
+
+/* ─── Jobs Table ────────────────────────────────────────────────────────── */
+.jobsTable {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.jobsHeader {
+  display: grid;
+  grid-template-columns: 80px 140px 1fr 90px 90px 80px 80px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.jobRow {
+  display: grid;
+  grid-template-columns: 80px 140px 1fr 90px 90px 80px 80px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--transition-fast);
+}
+
+.jobRow:last-child { border-bottom: none; }
+.jobRow:hover { background: rgba(255, 255, 255, 0.02); }
+
+.jobId { font-size: 0.8rem; }
+.jobModel { font-size: 0.8rem; font-weight: 600; }
+.jobPrompt { font-size: 0.8rem; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jobBounty { font-size: 0.8rem; color: var(--sol-green); font-weight: 600; }
+.jobTime { font-size: 0.8rem; color: var(--sol-orange); }
+
+.claimBtn {
+  padding: var(--space-1) var(--space-3);
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-sans);
+}
+
+.claimBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.claimBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ─── Register Form ─────────────────────────────────────────────────────── */
+.registerForm {
+  max-width: 600px;
+}
+
+.registerHeader {
+  margin-bottom: var(--space-8);
+}
+
+.formGroup {
+  margin-bottom: var(--space-6);
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+.formHint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.modelCheckboxes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.modelCheckbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modelCheckbox:hover {
+  border-color: var(--border-cyan);
+  background: var(--bg-card-hover);
+}
+
+.modelCheckbox input[type="checkbox"] {
+  accent-color: var(--sol-cyan);
+  width: 16px;
+  height: 16px;
+}
+
+.checkboxLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .globalStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .nodesGrid {
+    grid-template-columns: 1fr;
+  }
+  .nodeStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .jobsHeader, .jobRow {
+    grid-template-columns: 60px 100px 1fr 70px 70px;
+  }
+  .jobTime, .claimBtn { display: none; }
+  .header {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .claimPanel {
+    padding: var(--space-4) !important;
+  }
+  .claimPipeline {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .claimConnector {
+    width: 2px !important;
+    height: 20px !important;
+    margin-left: 15px !important;
+  }
+}
+
+/* ─── Active Job Row ────────────────────────────────────────────────────── */
+.jobRowActive {
+  background: rgba(0, 212, 255, 0.05) !important;
+  border-left: 3px solid var(--sol-cyan);
+}
+
+/* ─── Claim Flow Panel ──────────────────────────────────────────────────── */
+.claimPanel {
+  margin-top: var(--space-6);
+  padding: var(--space-6);
+  background: var(--bg-card);
+  border: 1px solid var(--border-cyan);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-glow-cyan);
+  animation: slideUp 0.3s var(--ease-out-expo);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.claimPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-5);
+}
+
+.claimPanelTitle {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.claimPanelClose {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all var(--transition-fast);
+}
+
+.claimPanelClose:hover {
+  background: rgba(255, 59, 92, 0.15);
+  border-color: rgba(255, 59, 92, 0.3);
+  color: var(--sol-red);
+}
+
+.claimPipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: var(--space-4);
+}
+
+.claimStep {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+}
+
+.claimStepDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border: 2px solid var(--border-subtle);
+  transition: all var(--transition-normal);
+}
+
+.claimStepInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.claimStepLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.claimStepTx {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* Claim step states */
+.claimPending .claimStepDot {
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+.claimPending .claimStepLabel {
+  color: var(--text-muted);
+}
+
+.claimActive .claimStepDot {
+  border-color: var(--sol-cyan);
+  background: var(--sol-cyan-dim);
+  color: var(--sol-cyan);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
+}
+
+.claimActive .claimStepLabel {
+  color: var(--sol-cyan);
+}
+
+.claimDone .claimStepDot {
+  border-color: var(--sol-green);
+  background: rgba(0, 245, 160, 0.15);
+  color: var(--sol-green);
+}
+
+.claimDone .claimStepLabel {
+  color: var(--sol-green);
+}
+
+.claimConnector {
+  width: 24px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--border-subtle), var(--border-medium));
+  flex-shrink: 0;
+}
+
+.claimPulse {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sol-cyan);
+  animation: claimPulseAnim 1s ease-in-out infinite;
+}
+
+@keyframes claimPulseAnim {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.claimSuccess {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(0, 245, 160, 0.08);
+  border: 1px solid rgba(0, 245, 160, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--sol-green);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.claimErrorMsg {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 59, 92, 0.08);
+  border: 1px solid rgba(255, 59, 92, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--sol-red);
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+/* ─── Loading Skeletons ─────────────────────────────────────────────────── */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.04),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% { left: 100%; }
+}
+
+.skeletonIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 auto var(--space-2);
+}
+
+.skeletonValue {
+  width: 60%;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 auto var(--space-2);
+}
+
+.skeletonLabel {
+  width: 80%;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  margin: 0 auto;
+}
+
+.skeletonRow {
+  height: 48px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+}
+
