@@ -29,11 +29,6 @@ export default function HeroSection() {
       <div className={`orb orb-violet ${styles.orbBottomLeft}`} />
 
       <div className={`container ${styles.heroContent}`}>
-        <div className={styles.badge}>
-          <span className={styles.badgeDot} />
-          Live on Solana Devnet
-        </div>
-
         <h1 className={styles.title}>
           <span className={styles.titleGradient}>
             {typedText}
