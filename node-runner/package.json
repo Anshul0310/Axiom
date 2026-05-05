@@ -1,0 +1,24 @@
+{
+  "name": "axiom-node-runner",
+  "version": "0.1.0",
+  "description": "Axiom GPU Node Runner — Decentralized AI Inference Daemon",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "npx tsx index.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@pinata/sdk": "^2.1.0",
+    "@solana/web3.js": "^1.95.0",
+    "axios": "^1.16.0",
+    "chalk": "^5.3.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}
