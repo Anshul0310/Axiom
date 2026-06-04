@@ -5,7 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 import { useNetwork } from "@/contexts/NetworkContext";
 import { AxiomClient, parseJobStatus, OnChainJob } from "@/program/client";
 import styles from "./explorer.module.css";
@@ -66,50 +66,52 @@ export default function ExplorerPage() {
     return new AxiomClient(provider);
   }, [connected, publicKey, signTransaction, signAllTransactions, connection]);
 
-  // Initial data fetch
+  // Get a read-only client (works without wallet)
+  const getReadOnlyClient = useCallback((): AxiomClient => {
+    return AxiomClient.create(connection);
+  }, [connection]);
+
+  // Initial data fetch — works without wallet
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
 
     const fetchOnChainJobs = async () => {
-      const client = getAxiomClient();
-      if (client) {
-        try {
-          const onChainJobs = await client.getAllJobs();
+      const client = getAxiomClient() || getReadOnlyClient();
+      try {
+        const onChainJobs = await client.getAllJobs();
+        if (onChainJobs.length > 0) {
           setJobs(onChainJobs.map(onChainJobToExplorer));
           setUsingOnChain(true);
-        } catch {
-          console.error("Failed to fetch jobs");
-          setJobs([]);
-          setUsingOnChain(false);
         }
+      } catch {
+        console.error("Failed to fetch jobs");
+        setJobs([]);
+        setUsingOnChain(false);
       }
     };
 
     fetchOnChainJobs();
-  }, [getAxiomClient]);
+  }, [getAxiomClient, getReadOnlyClient]);
 
-  // Simulate live updates (mock mode) or poll on-chain (real mode)
+  // Poll on-chain data for live updates
   useEffect(() => {
     if (!liveUpdates || !mounted) return;
 
-    if (usingOnChain || !usingOnChain) {
-      // Poll on-chain data
-      const interval = setInterval(async () => {
-        const client = getAxiomClient();
-        if (client) {
-          try {
-            const onChainJobs = await client.getAllJobs();
-            setJobs(onChainJobs.map(onChainJobToExplorer));
-            setUsingOnChain(true);
-          } catch {
-            // Silently fail
-          }
+    const interval = setInterval(async () => {
+      const client = getAxiomClient() || getReadOnlyClient();
+      try {
+        const onChainJobs = await client.getAllJobs();
+        if (onChainJobs.length > 0) {
+          setJobs(onChainJobs.map(onChainJobToExplorer));
+          setUsingOnChain(true);
         }
-      }, 5000); // Poll every 5s for on-chain
-      return () => clearInterval(interval);
-    }
-  }, [liveUpdates, mounted, usingOnChain, getAxiomClient]);
+      } catch {
+        // Silently fail
+      }
+    }, 5000); // Poll every 5s
+    return () => clearInterval(interval);
+  }, [liveUpdates, mounted, getAxiomClient, getReadOnlyClient]);
 
   const filteredJobs = jobs.filter((job) => {
     if (statusFilter !== "all" && job.status !== statusFilter) return false;
@@ -293,7 +295,7 @@ export default function ExplorerPage() {
           </div>
         </div>
       </div>
-      <Footer />
+
     </main>
   );
 }

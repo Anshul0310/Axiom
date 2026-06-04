@@ -65,10 +65,14 @@ export interface PlatformConfigAccount {
 }
 
 // ─── PDA Seeds ─────────────────────────────────────────────────────────────
+function textToSeed(text: string): Uint8Array {
+  return new TextEncoder().encode(text);
+}
+
 export const SEEDS = {
-  CONFIG: Buffer.from("config"),
-  JOB: Buffer.from("job"),
-  NODE: Buffer.from("node"),
+  CONFIG: textToSeed("config"),
+  JOB: textToSeed("job"),
+  NODE: textToSeed("node"),
 } as const;
 
 // ─── Helper: Derive PDAs ──────────────────────────────────────────────────
@@ -83,8 +87,10 @@ export function deriveJobPDA(
   client: PublicKey,
   jobId: number | bigint
 ): [PublicKey, number] {
-  const jobIdBuf = Buffer.alloc(8);
-  jobIdBuf.writeBigUInt64LE(BigInt(jobId));
+  const ab = new ArrayBuffer(8);
+  const view = new DataView(ab);
+  view.setBigUint64(0, BigInt(jobId), true); // little-endian
+  const jobIdBuf = new Uint8Array(ab);
   return PublicKey.findProgramAddressSync(
     [SEEDS.JOB, client.toBuffer(), jobIdBuf],
     AXIOM_PROGRAM_ID

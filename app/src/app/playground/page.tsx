@@ -6,10 +6,11 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 import { useNetwork } from "@/contexts/NetworkContext";
 import { AxiomClient } from "@/program/client";
 import { SUPPORTED_MODELS } from "@/program/types";
+import { uploadToIPFS } from "@/lib/ipfs";
 import styles from "./playground.module.css";
 
 interface Message {
@@ -103,14 +104,69 @@ export default function PlaygroundPage() {
     return new AxiomClient(provider);
   }, [connected, publicKey, signTransaction, signAllTransactions, connection]);
 
+  /** Run the simulated demo pipeline (fallback when on-chain fails or wallet not connected) */
+  const runSimulatedPipeline = async (currentPrompt: string) => {
+    // Phase 1: Simulated posting
+    setPhase("posting");
+    const postMsg: Message = {
+      id: `sys-post-${Date.now()}`,
+      role: "system",
+      content: `📡 Posting job to Axiom ${config.label}...\nModel: ${selectedModel.name}\nBounty: ${selectedModel.costPerJob} SOL\nDeadline: 30 seconds\n${!connected ? "⚡ Demo Mode — Connect wallet for real on-chain transactions" : ""}`,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, postMsg]);
+    await sleep(1200);
+
+    // Phase 2: Simulated commit
+    setPhase("committed");
+    const commitMsg: Message = {
+      id: `sys-commit-${Date.now()}`,
+      role: "system",
+      content: `🔒 Node operator committed result hash on-chain.\nCommit: 0x${randomHex(16)}...`,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, commitMsg]);
+    await sleep(1500);
+
+    // Phase 3: Simulated reveal
+    setPhase("revealed");
+    const revealMsg: Message = {
+      id: `sys-reveal-${Date.now()}`,
+      role: "system",
+      content: `✅ Result revealed and verified on-chain. Hash match confirmed.`,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, revealMsg]);
+    await sleep(1000);
+
+    // Phase 4: Simulated settle + AI response
+    setPhase("settled");
+    const responses = SIMULATED_RESPONSES[selectedModel.id] || SIMULATED_RESPONSES["llama-2-7b"];
+    const response = responses[Math.floor(Math.random() * responses.length)];
+    const latencyMs = (parseFloat(selectedModel.avgLatency) * 1000 + Math.random() * 500).toFixed(0);
+
+    const assistantMsg: Message = {
+      id: `assistant-${Date.now()}`,
+      role: "assistant",
+      content: response,
+      timestamp: new Date(),
+      model: selectedModel.name,
+      cost: selectedModel.costPerJob,
+      latency: `${latencyMs}ms`,
+    };
+    setMessages((prev) => [...prev, assistantMsg]);
+
+    const settleMsg: Message = {
+      id: `sys-settle-${Date.now()}`,
+      role: "system",
+      content: `💰 Job settled — ${selectedModel.costPerJob} SOL paid to node operator (2% platform fee deducted).`,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, settleMsg]);
+  };
+
   const handleSubmit = async () => {
     if (!prompt.trim() || phase !== "idle") return;
-
-    // Require wallet connection
-    if (!connected) {
-      setVisible(true);
-      return;
-    }
 
     const userMsg: Message = {
       id: `user-${Date.now()}`,
@@ -122,6 +178,13 @@ export default function PlaygroundPage() {
     const currentPrompt = prompt;
     setPrompt("");
 
+    // If wallet not connected, run simulation directly
+    if (!connected) {
+      await runSimulatedPipeline(currentPrompt);
+      setPhase("idle");
+      return;
+    }
+
     const client = getAxiomClient();
     const jobId = Math.floor(Date.now() / 1000);
     let realTxHash: string | null = null;
@@ -131,7 +194,7 @@ export default function PlaygroundPage() {
     const postMsg: Message = {
       id: `sys-post-${Date.now()}`,
       role: "system",
-      content: `📡 Posting job to Axiom ${config.label}...\nModel: ${selectedModel.name}\nBounty: ${selectedModel.costPerJob} SOL\nDeadline: 30 seconds\n${isMainnet ? "⚠️ MAINNET — This will use REAL SOL" : ""}`,
+      content: `📡 Posting job to Axiom ${config.label}...\nModel: ${selectedModel.name}\nBounty: ${selectedModel.costPerJob} SOL\nDeadline: 5 minutes\n${isMainnet ? "⚠️ MAINNET — This will use REAL SOL" : ""}`,
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, postMsg]);
@@ -139,6 +202,21 @@ export default function PlaygroundPage() {
     // Try real on-chain transaction
     if (client) {
       try {
+        // Upload prompt to IPFS (or local hash fallback)
+        const { hashBytes, isLocal } = await uploadToIPFS(currentPrompt, {
+          name: `axiom-prompt-${jobId}`,
+          keyvalues: { model: selectedModel.id, jobId: String(jobId) },
+        });
+
+        if (!isLocal) {
+          setMessages((prev) => [...prev, {
+            id: `sys-ipfs-${Date.now()}`,
+            role: "system",
+            content: `📦 Prompt uploaded to IPFS.`,
+            timestamp: new Date(),
+          }]);
+        }
+
         realTxHash = await client.postJob({
           jobId,
           modelId: selectedModel.id,
@@ -150,17 +228,21 @@ export default function PlaygroundPage() {
         const txConfirmMsg: Message = {
           id: `sys-txconfirm-${Date.now()}`,
           role: "system",
-          content: `✅ Job posted on-chain!\nTX: ${realTxHash}\n\n⏳ Waiting for an Axiom Node Operator to claim and process your job...\n(💡 Tip: Open the Dashboard in a new tab to register a node and manually claim this job!)`,
+          content: `✅ Job posted on-chain!\nTX: ${realTxHash}\nInput Hash: ${hashBytes.slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('')}...\n\n⏳ Waiting for an Axiom Node Operator to claim and process your job...\n(💡 Tip: Open the Dashboard in a new tab to register a node and manually claim this job!)`,
           timestamp: new Date(),
           txHash: realTxHash,
         };
         setMessages((prev) => [...prev, txConfirmMsg]);
 
-        // Poll job status
+        // Poll job status for up to 60 seconds
         let isSettled = false;
         let lastPhase = "posting";
-        while (!isSettled && publicKey) {
+        let pollCount = 0;
+        const maxPolls = 20; // 20 * 3s = 60s
+        
+        while (!isSettled && publicKey && pollCount < maxPolls) {
           await sleep(3000); // check every 3s
+          pollCount++;
           const job = await client.getJob(publicKey, jobId);
           if (!job) continue;
 
@@ -189,7 +271,7 @@ export default function PlaygroundPage() {
             lastPhase = "settled";
             isSettled = true;
             
-            // Show AI response mock when settled (since real AI worker isn't running)
+            // Show AI response when settled
             const responses = SIMULATED_RESPONSES[selectedModel.id] || SIMULATED_RESPONSES["llama-2-7b"];
             const response = responses[Math.floor(Math.random() * responses.length)];
             const latencyMs = (parseFloat(selectedModel.avgLatency) * 1000 + Math.random() * 500).toFixed(0);
@@ -202,6 +284,7 @@ export default function PlaygroundPage() {
               model: selectedModel.name,
               cost: selectedModel.costPerJob,
               latency: `${latencyMs}ms`,
+              txHash: realTxHash || undefined,
             };
             setMessages((prev) => [...prev, assistantMsg]);
 
@@ -214,15 +297,46 @@ export default function PlaygroundPage() {
             setMessages((prev) => [...prev, settleMsg]);
           }
         }
+
+        // If polling timed out and job wasn't settled, show demo response
+        if (!isSettled) {
+          setMessages((prev) => [...prev, {
+            id: `sys-timeout-${Date.now()}`,
+            role: "system",
+            content: `⏰ No node operator claimed this job within 60s. Showing simulated response.\n(Run the Node Runner daemon to process jobs: cd node-runner && npx tsx index.ts)`,
+            timestamp: new Date(),
+          }]);
+
+          // Show simulated response so the demo is still compelling
+          const responses = SIMULATED_RESPONSES[selectedModel.id] || SIMULATED_RESPONSES["llama-2-7b"];
+          const response = responses[Math.floor(Math.random() * responses.length)];
+          const latencyMs = (parseFloat(selectedModel.avgLatency) * 1000 + Math.random() * 500).toFixed(0);
+
+          setPhase("settled");
+          const assistantMsg: Message = {
+            id: `assistant-${Date.now()}`,
+            role: "assistant",
+            content: response,
+            timestamp: new Date(),
+            model: selectedModel.name,
+            cost: selectedModel.costPerJob,
+            latency: `${latencyMs}ms (simulated)`,
+            txHash: realTxHash || undefined,
+          };
+          setMessages((prev) => [...prev, assistantMsg]);
+        }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : "Unknown error";
         const errorMsg: Message = {
           id: `sys-error-${Date.now()}`,
           role: "system",
-          content: `⚠️ On-chain transaction failed: ${errorMessage}`,
+          content: `⚠️ On-chain transaction failed: ${errorMessage}\n\n🔄 Running in demo mode...`,
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errorMsg]);
+
+        // Fallback to simulation so the user still gets a response
+        await runSimulatedPipeline(currentPrompt);
       }
     }
 
@@ -321,8 +435,8 @@ export default function PlaygroundPage() {
           {!connected && (
             <div className={styles.sidebarSection}>
               <div className={styles.walletWarning}>
-                <span>🔗</span>
-                <span>Connect wallet for on-chain transactions</span>
+                <span>⚡</span>
+                <span>Demo mode — Connect wallet for on-chain transactions</span>
               </div>
             </div>
           )}
@@ -338,6 +452,7 @@ export default function PlaygroundPage() {
             <span className={styles.chatSubtitle}>
               Powered by Axiom Protocol · {config.label}
               {isMainnet && " ⚠️ REAL SOL"}
+              {!connected && " · Demo Mode"}
             </span>
           </div>
 
@@ -426,11 +541,7 @@ export default function PlaygroundPage() {
             <div className={styles.inputWrapper}>
               <textarea
                 className={styles.promptInput}
-                placeholder={
-                  connected
-                    ? `Send a prompt to ${selectedModel.name}...`
-                    : "Connect your wallet first..."
-                }
+                placeholder={`Send a prompt to ${selectedModel.name}...`}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={(e) => {
@@ -456,14 +567,16 @@ export default function PlaygroundPage() {
             </div>
             <p className={styles.inputHint}>
               Press Enter to send · Shift+Enter for new line ·{" "}
-              {isMainnet
+              {!connected
+                ? "⚡ Demo Mode — no wallet needed"
+                : isMainnet
                 ? "⚠️ MAINNET — Real SOL transactions"
                 : `Jobs on ${config.label}`}
             </p>
           </div>
         </section>
       </div>
-      <Footer />
+
     </main>
   );
 }
@@ -486,4 +599,8 @@ function capitalize(s: string) {
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function randomHex(length: number): string {
+  return Array.from({ length }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 }

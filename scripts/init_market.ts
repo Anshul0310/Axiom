@@ -14,26 +14,34 @@ async function main() {
   );
 
   console.log("Platform Config PDA:", platformConfigPDA.toBase58());
+  console.log("Admin (your wallet):", provider.wallet.publicKey.toBase58());
 
   try {
     const tx = await program.methods
       .initialize({
         minStake: new anchor.BN(1_000_000_000), // 1 SOL
         platformFeeBps: 200, // 2%
-        verificationRateBps: 500, // 5%
-        slashPenaltyBps: 1000, // 10%
+        verificationRateBps: 2000, // 20%
+        slashPenaltyBps: 5000, // 50%
       })
       .accounts({
         platformConfig: platformConfigPDA,
         admin: provider.wallet.publicKey,
-        treasury: provider.wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .rpc();
 
-    console.log("Market initialized successfully. Transaction Hash:", tx);
+    console.log("✅ Platform initialized successfully!");
+    console.log("Transaction Hash:", tx);
+    console.log("\nYou can now:");
+    console.log("  1. Register nodes via the Dashboard");
+    console.log("  2. Post inference jobs via the Playground");
   } catch (error) {
-    console.error("Error initializing market:", error);
+    if (String(error).includes("already in use")) {
+      console.log("ℹ️  Platform is already initialized.");
+    } else {
+      console.error("❌ Error initializing platform:", error);
+    }
   }
 }
 

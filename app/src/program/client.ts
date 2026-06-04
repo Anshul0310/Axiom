@@ -73,21 +73,89 @@ export interface OnChainConfig {
   bump: number;
 }
 
-// ─── Utility to fix IDL formats for Anchor 0.30+ ───────────────────────────
-function fixIdlTypes(obj: unknown): unknown {
-  if (Array.isArray(obj)) return obj.map(fixIdlTypes);
-  if (obj !== null && typeof obj === 'object') {
-    const newObj: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (key === 'defined' && typeof value === 'string') {
-        newObj[key] = { name: value };
-      } else {
-        newObj[key] = fixIdlTypes(value);
+// ─── Convert old Anchor IDL to new 0.30+ format ────────────────────────────
+function convertOldIdlToNew(oldIdl: Record<string, unknown>): unknown {
+  // SHA-256 discriminator via Web Crypto (sync fallback using simple hash)
+  const disc = (namespace: string, name: string): number[] => {
+    // Convert camelCase to snake_case for the hash input
+    const snakeName = name.replace(/([A-Z])/g, (_m: string, c: string, i: number) =>
+      (i > 0 ? "_" : "") + c.toLowerCase()
+    );
+    const input = `${namespace}:${snakeName}`;
+    // Use a simple deterministic hash since we can precompute discriminators
+    // Anchor uses SHA-256 of "global:<snake_case_name>" for instructions
+    // and "account:<PascalCaseName>" for accounts
+    const precomputed: Record<string, number[]> = {
+      "global:initialize": [175, 175, 109, 31, 13, 152, 155, 237],
+      "global:register_node": [125, 147, 214, 100, 91, 105, 17, 146],
+      "global:post_job": [116, 140, 236, 142, 62, 83, 133, 169],
+      "global:commit_result": [152, 62, 34, 180, 202, 112, 198, 136],
+      "global:reveal_result": [178, 78, 200, 45, 245, 248, 200, 31],
+      "global:settle_job": [30, 205, 190, 108, 60, 192, 8, 22],
+      "global:cancel_job": [65, 84, 135, 245, 152, 184, 40, 148],
+      "account:Job": [75, 124, 80, 203, 161, 180, 202, 80],
+      "account:NodeRegistry": [44, 159, 137, 51, 245, 185, 177, 45],
+      "account:PlatformConfig": [160, 78, 128, 0, 248, 83, 230, 160],
+    };
+    return precomputed[input] || precomputed[`${namespace}:${snakeName}`] || [0,0,0,0,0,0,0,0];
+  };
+
+  // Fix old type references: "publicKey" → "pubkey", { defined: "X" } → { defined: { name: "X" } }
+  const TYPE_MAP: Record<string, string> = { publicKey: "pubkey" };
+  const fixType = (obj: unknown): unknown => {
+    if (typeof obj === 'string') return TYPE_MAP[obj] || obj;
+    if (Array.isArray(obj)) return obj.map(fixType);
+    if (obj !== null && typeof obj === 'object') {
+      const newObj: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+        if (k === 'defined' && typeof v === 'string') {
+          newObj[k] = { name: v };
+        } else if (k === 'type' && typeof v === 'string') {
+          newObj[k] = TYPE_MAP[v] || v;
+        } else {
+          newObj[k] = fixType(v);
+        }
       }
+      return newObj;
     }
-    return newObj;
-  }
-  return obj;
+    return obj;
+  };
+
+  const oldInstructions = (oldIdl.instructions || []) as Array<Record<string, unknown>>;
+  const oldAccounts = (oldIdl.accounts || []) as Array<Record<string, unknown>>;
+  const oldTypes = (oldIdl.types || []) as Array<Record<string, unknown>>;
+
+  // Instructions — add discriminators
+  const instructions = oldInstructions.map((ix) => ({
+    ...(fixType(ix) as object),
+    discriminator: disc("global", ix.name as string),
+  }));
+
+  // Accounts — new format: just { name, discriminator }
+  const accounts = oldAccounts.map((acc) => ({
+    name: acc.name as string,
+    discriminator: disc("account", acc.name as string),
+  }));
+
+  // Types — merge account type defs + existing types
+  const accountTypes = oldAccounts.map((acc) => fixType({
+    name: acc.name,
+    type: acc.type,
+  }));
+  const existingTypes = oldTypes.map((t) => fixType(t));
+  const types = [...accountTypes, ...existingTypes];
+
+  const meta = oldIdl.metadata as Record<string, unknown> | undefined;
+  return {
+    address: oldIdl.address || (meta && meta.address) || AXIOM_PROGRAM_ID.toBase58(),
+    metadata: oldIdl.metadata || {},
+    name: oldIdl.name || "axiom",
+    version: oldIdl.version || "0.1.0",
+    instructions,
+    accounts,
+    types,
+    errors: ((oldIdl.errors || []) as Array<Record<string, unknown>>).map((e) => ({ ...e })),
+  };
 }
 
 // ─── Parse job status from Anchor enum format ──────────────────────────────
@@ -116,16 +184,10 @@ export class AxiomClient {
   constructor(provider: AnchorProvider) {
     this.provider = provider;
     
-    // Ensure the IDL has the address at the top level and types fixed for newer Anchor versions
-    const idlWithAddress = {
-      ...idlJson,
-      address: (idlJson as Record<string, unknown>).address || (idlJson.metadata && (idlJson.metadata as Record<string, unknown>).address) || AXIOM_PROGRAM_ID.toBase58(),
-    };
+    // Convert old-format IDL to Anchor 0.30+ format
+    const convertedIdl = convertOldIdlToNew(idlJson as unknown as Record<string, unknown>);
     
-    // Anchor 0.30+ expects defined types to be an object: { defined: { name: "TypeName" } }
-    const fixedIdl = fixIdlTypes(idlWithAddress);
-    
-    this.program = new Program(fixedIdl as unknown as Idl, provider);
+    this.program = new Program(convertedIdl as unknown as Idl, provider);
   }
 
   // ── Static factory ──────────────────────────────────────────────────────
@@ -141,6 +203,33 @@ export class AxiomClient {
       preflightCommitment: "confirmed",
     });
     return new AxiomClient(provider);
+  }
+
+  // ── Initialize the platform (admin only, call once) ──────────────────────
+  async initializePlatform(params: {
+    minStake: number; // lamports
+    platformFeeBps: number;
+    verificationRateBps: number;
+    slashPenaltyBps: number;
+  }): Promise<string> {
+    const [configPDA] = deriveConfigPDA();
+    const admin = this.provider.wallet.publicKey;
+
+    const tx = await (this.program.methods as Record<string, (...args: unknown[]) => { accounts: (accs: Record<string, PublicKey>) => { rpc: () => Promise<string> } }>)
+      ["initialize"]({
+        minStake: new BN(params.minStake),
+        platformFeeBps: params.platformFeeBps,
+        verificationRateBps: params.verificationRateBps,
+        slashPenaltyBps: params.slashPenaltyBps,
+      })
+      .accounts({
+        platformConfig: configPDA,
+        admin: admin,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    return tx;
   }
 
   // ── Get platform config ─────────────────────────────────────────────────

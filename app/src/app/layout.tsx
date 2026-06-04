@@ -2,16 +2,25 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { NetworkProvider } from "@/contexts/NetworkContext";
 import WalletProvider from "@/components/WalletProvider";
-import NetworkBackground from "@/components/NetworkBackground";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 export const metadata: Metadata = {
-  title: "Axiom — Decentralized AI Inference on Solana",
+  title: "Axiom - Decentralized AI Inference on Solana",
   description:
-    "The first decentralized AI inference marketplace on Solana. GPU owners earn SOL, developers get cheap AI, and Solana handles trust automatically.",
-  keywords: ["Solana", "AI", "inference", "decentralized", "GPU", "marketplace", "DePIN", "Axiom"],
+    "A decentralized AI inference marketplace on Solana where GPU owners earn SOL, developers get affordable inference, and settlement happens on-chain.",
+  keywords: [
+    "Solana",
+    "AI",
+    "inference",
+    "decentralized",
+    "GPU",
+    "marketplace",
+    "DePIN",
+    "Axiom",
+  ],
   openGraph: {
-    title: "Axiom — Decentralized AI Inference on Solana",
-    description: "Uber for AI inference. GPU owners earn SOL running AI models.",
+    title: "Axiom - Decentralized AI Inference on Solana",
+    description: "A Solana-native marketplace for decentralized AI inference.",
     type: "website",
   },
 };
@@ -24,8 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="grid-bg" />
-        <NetworkBackground />
+        <AnimatedBackground />
         <NetworkProvider>
           <WalletProvider>{children}</WalletProvider>
         </NetworkProvider>

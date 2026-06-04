@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 import { useNetwork } from "@/contexts/NetworkContext";
-import { AxiomClient, parseJobStatus, parseNodeStatus, OnChainJob, OnChainNode } from "@/program/client";
+import { AxiomClient, parseJobStatus, parseNodeStatus, OnChainJob, OnChainNode, OnChainConfig } from "@/program/client";
 import { modelNameToId } from "@/program/types";
 import styles from "./dashboard.module.css";
 
@@ -88,6 +88,10 @@ export default function DashboardPage() {
   const [claimPhase, setClaimPhase] = useState<ClaimPhase>("idle");
   const [claimTxHashes, setClaimTxHashes] = useState<ClaimTxHashes>({});
   const [claimError, setClaimError] = useState<string | null>(null);
+  const [platformConfig, setPlatformConfig] = useState<OnChainConfig | null>(null);
+  const [platformNotFound, setPlatformNotFound] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initStatus, setInitStatus] = useState<string | null>(null);
 
   const { connected, publicKey, signTransaction, signAllTransactions } = useWallet();
   const { setVisible } = useWalletModal();
@@ -115,6 +119,11 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setLoadingData(true);
       try {
+        // Check platform config first
+        const cfg = await client.getConfig();
+        setPlatformConfig(cfg);
+        setPlatformNotFound(!cfg);
+
         const [nodes, jobs] = await Promise.all([
           client.getAllNodes(),
           client.getAllJobs(),
@@ -123,12 +132,48 @@ export default function DashboardPage() {
         setOnChainJobs(jobs);
       } catch {
         // Fall back to mock data silently
+        setPlatformNotFound(true);
       }
       setLoadingData(false);
     };
 
     fetchData();
   }, [connected, getAxiomClient]);
+
+  // Initialize platform handler
+  const handleInitializePlatform = async () => {
+    if (!connected) {
+      setVisible(true);
+      return;
+    }
+    const client = getAxiomClient();
+    if (!client) return;
+
+    setIsInitializing(true);
+    setInitStatus(null);
+    try {
+      const tx = await client.initializePlatform({
+        minStake: 1 * LAMPORTS_PER_SOL, // 1 SOL
+        platformFeeBps: 200, // 2%
+        verificationRateBps: 2000, // 20%
+        slashPenaltyBps: 5000, // 50%
+      });
+      setInitStatus(`✅ Platform initialized! TX: ${tx}`);
+      setPlatformNotFound(false);
+      // Refresh config
+      const cfg = await client.getConfig();
+      setPlatformConfig(cfg);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      if (msg.includes("already in use")) {
+        setInitStatus("ℹ️ Platform is already initialized.");
+        setPlatformNotFound(false);
+      } else {
+        setInitStatus(`❌ Failed: ${msg}`);
+      }
+    }
+    setIsInitializing(false);
+  };
 
   const allModels = ["LLaMA 2 7B", "Mistral 7B", "CodeLlama 13B", "Stable Diffusion XL", "Whisper Large v3"];
 
@@ -308,6 +353,46 @@ export default function DashboardPage() {
       <Navbar />
       <div className={styles.page}>
         <div className="container">
+          {/* Platform Not Initialized Banner */}
+          {connected && platformNotFound && (
+            <div style={{
+              background: "rgba(255, 170, 0, 0.1)",
+              border: "1px solid rgba(255, 170, 0, 0.3)",
+              borderRadius: "var(--radius-lg)",
+              padding: "var(--space-5)",
+              marginBottom: "var(--space-6)",
+              marginTop: "var(--space-6)",
+            }}>
+              <h3 style={{ color: "var(--sol-gold)", marginBottom: "var(--space-2)" }}>⚠️ Platform Not Initialized</h3>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "var(--space-4)" }}>
+                The Axiom PlatformConfig account hasn&apos;t been created on {config.label} yet. 
+                Initialize it to enable job posting and node registration.
+              </p>
+              {initStatus && (
+                <p style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.8rem",
+                  padding: "var(--space-2) var(--space-3)",
+                  borderRadius: "var(--radius-sm)",
+                  background: initStatus.startsWith("✅") || initStatus.startsWith("ℹ️") ? "var(--sol-green-dim)" : "var(--sol-red-dim)",
+                  color: initStatus.startsWith("✅") || initStatus.startsWith("ℹ️") ? "var(--sol-green)" : "var(--sol-red)",
+                  marginBottom: "var(--space-3)",
+                  wordBreak: "break-all",
+                }}>
+                  {initStatus}
+                </p>
+              )}
+              <button
+                className="btn btn-primary"
+                onClick={handleInitializePlatform}
+                disabled={isInitializing}
+                id="initialize-platform-btn"
+              >
+                {isInitializing ? "Initializing..." : "🚀 Initialize Platform"}
+              </button>
+            </div>
+          )}
+
           {/* Header */}
           <div className={styles.header}>
             <div>
@@ -424,7 +509,7 @@ export default function DashboardPage() {
                       </div>
                       <div className={styles.nodeStat}>
                         <span className={styles.nodeStatLabel}>Reputation</span>
-                        <span className={styles.nodeStatValue}>{node.reputation}/1000</span>
+                        <span className={styles.nodeStatValue}>{(node.reputation / 100).toFixed(1)}%</span>
                       </div>
                     </div>
 
@@ -648,7 +733,7 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-      <Footer />
+
     </main>
   );
 }

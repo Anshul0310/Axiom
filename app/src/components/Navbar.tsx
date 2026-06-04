@@ -1,18 +1,31 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { useNetwork, NETWORK_CONFIGS, SolanaNetwork } from "@/contexts/NetworkContext";
+import {
+  NETWORK_CONFIGS,
+  SolanaNetwork,
+  useNetwork,
+} from "@/contexts/NetworkContext";
 import styles from "./Navbar.module.css";
 
-const NETWORKS: { id: SolanaNetwork; label: string; icon: string; color: string }[] = [
-  { id: "devnet", label: "Devnet", icon: "🟢", color: "#00F5A0" },
-  { id: "testnet", label: "Testnet", icon: "🟡", color: "#FFD700" },
-  { id: "mainnet-beta", label: "Mainnet", icon: "🔴", color: "#FF3B5C" },
+const NETWORKS: { id: SolanaNetwork; label: string; color: string }[] = [
+  { id: "devnet", label: "Devnet", color: "#00F5A0" },
+  { id: "testnet", label: "Testnet", color: "#FFD700" },
+  { id: "mainnet-beta", label: "Mainnet", color: "#FF3B5C" },
 ];
+
+const NAV_LINKS = [
+  { href: "/playground", label: "Playground", glyph: "PG" },
+  { href: "/dashboard", label: "Nodes", glyph: "ND" },
+  { href: "/explorer", label: "Explorer", glyph: "EX" },
+];
+
+const smoothEase = [0.16, 1, 0.3, 1] as const;
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -29,16 +42,15 @@ export default function Navbar() {
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
   }, [pathname]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -90,36 +102,46 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`} id="main-nav">
+      <motion.nav
+        className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}
+        id="main-nav"
+        initial={{ y: -18, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: smoothEase }}
+      >
         <div className={`container ${styles.navInner}`}>
           <Link href="/" className={styles.logo} id="nav-logo">
-            <span className={styles.logoIcon}>◆</span>
+            <span className={styles.logoIcon} aria-hidden="true" />
             <span className={styles.logoText}>Axiom</span>
           </Link>
 
-          {/* Desktop links */}
           <div className={styles.navLinks}>
-            <Link href="/playground" className={`${styles.navLink} ${isActive("/playground") ? styles.navLinkActive : ""}`}>
-              ⚡ Playground
-            </Link>
-            <Link href="/dashboard" className={`${styles.navLink} ${isActive("/dashboard") ? styles.navLinkActive : ""}`}>
-              🖥️ Nodes
-            </Link>
-            <Link href="/explorer" className={`${styles.navLink} ${isActive("/explorer") ? styles.navLinkActive : ""}`}>
-              🔍 Explorer
-            </Link>
-            <Link href="/docs" className={`${styles.navLink} ${isActive("/docs") ? styles.navLinkActive : ""}`}>
-              📄 Docs
-            </Link>
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`${styles.navLink} ${isActive(link.href) ? styles.navLinkActive : ""}`}
+              >
+                <span className={styles.navGlyph}>{link.glyph}</span>
+                <span>{link.label}</span>
+                {isActive(link.href) && (
+                  <motion.span
+                    className={styles.activePill}
+                    layoutId="nav-active-pill"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                )}
+              </Link>
+            ))}
           </div>
 
           <div className={styles.navActions}>
-            {/* Network Dropdown */}
             <div className={styles.networkDropdownWrapper} ref={dropdownRef}>
               <button
                 className={styles.networkBadge}
                 onClick={() => setNetworkDropdownOpen(!networkDropdownOpen)}
                 id="network-selector"
+                aria-expanded={networkDropdownOpen}
               >
                 <span
                   className={styles.networkDot}
@@ -127,32 +149,45 @@ export default function Navbar() {
                 />
                 {currentNet.label}
                 <span className={styles.networkChevron}>
-                  {networkDropdownOpen ? "▲" : "▼"}
+                  {networkDropdownOpen ? "^" : "v"}
                 </span>
               </button>
 
-              {networkDropdownOpen && (
-                <div className={styles.networkDropdown}>
-                  <div className={styles.networkDropdownHeader}>Select Network</div>
-                  {NETWORKS.map((net) => (
-                    <button
-                      key={net.id}
-                      className={`${styles.networkOption} ${net.id === network ? styles.networkOptionActive : ""}`}
-                      onClick={() => handleNetworkSelect(net.id)}
-                      id={`network-${net.id}`}
-                    >
-                      <span className={styles.networkOptionDot} style={{ background: net.color }} />
-                      <div className={styles.networkOptionInfo}>
-                        <span className={styles.networkOptionLabel}>{net.label}</span>
-                        <span className={styles.networkOptionUrl}>
-                          {NETWORK_CONFIGS[net.id].endpoint.replace("https://", "")}
-                        </span>
-                      </div>
-                      {net.id === network && <span className={styles.networkCheck}>✓</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <AnimatePresence>
+                {networkDropdownOpen && (
+                  <motion.div
+                    className={styles.networkDropdown}
+                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.18, ease: smoothEase }}
+                  >
+                    <div className={styles.networkDropdownHeader}>Select Network</div>
+                    {NETWORKS.map((net) => (
+                      <button
+                        key={net.id}
+                        className={`${styles.networkOption} ${net.id === network ? styles.networkOptionActive : ""}`}
+                        onClick={() => handleNetworkSelect(net.id)}
+                        id={`network-${net.id}`}
+                      >
+                        <span
+                          className={styles.networkOptionDot}
+                          style={{ background: net.color }}
+                        />
+                        <div className={styles.networkOptionInfo}>
+                          <span className={styles.networkOptionLabel}>{net.label}</span>
+                          <span className={styles.networkOptionUrl}>
+                            {NETWORK_CONFIGS[net.id].endpoint.replace("https://", "")}
+                          </span>
+                        </div>
+                        {net.id === network && (
+                          <span className={styles.networkCheck}>Active</span>
+                        )}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <button
@@ -170,11 +205,11 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Mobile hamburger */}
             <button
               className={`${styles.hamburger} ${mobileOpen ? styles.hamburgerOpen : ""}`}
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
               id="mobile-menu-btn"
             >
               <span />
@@ -184,76 +219,98 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className={styles.mobileMenu}>
-            <Link href="/playground" className={`${styles.mobileLink} ${isActive("/playground") ? styles.mobileLinkActive : ""}`}>
-              ⚡ Playground
-            </Link>
-            <Link href="/dashboard" className={`${styles.mobileLink} ${isActive("/dashboard") ? styles.mobileLinkActive : ""}`}>
-              🖥️ Nodes
-            </Link>
-            <Link href="/explorer" className={`${styles.mobileLink} ${isActive("/explorer") ? styles.mobileLinkActive : ""}`}>
-              🔍 Explorer
-            </Link>
-            <Link href="/docs" className={`${styles.mobileLink} ${isActive("/docs") ? styles.mobileLinkActive : ""}`}>
-              📄 Docs
-            </Link>
-            <button
-              className={styles.mobileWalletBtn}
-              onClick={handleWalletClick}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              className={styles.mobileMenu}
+              initial={{ opacity: 0, y: -12, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              transition={{ duration: 0.22, ease: smoothEase }}
             >
-              {connected && publicKey
-                ? `Disconnect (${truncateAddress(publicKey.toBase58())})`
-                : "Connect Wallet"}
-            </button>
-          </div>
-        )}
-      </nav>
-
-      {/* Mainnet Warning Modal */}
-      {showMainnetWarning && (
-        <div className={styles.modalOverlay} onClick={cancelMainnet}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalIcon}>⚠️</div>
-            <h3 className={styles.modalTitle}>Switch to Mainnet?</h3>
-            <p className={styles.modalText}>
-              You are about to switch to <strong>Solana Mainnet-Beta</strong>.
-              All transactions will use <strong>real SOL</strong> and are
-              <strong> irreversible</strong>.
-            </p>
-            <ul className={styles.modalList}>
-              <li>Posting jobs will escrow real SOL</li>
-              <li>Node registration requires real SOL stake</li>
-              <li>Settlements transfer real SOL between wallets</li>
-            </ul>
-            <div className={styles.modalActions}>
-              <button className={styles.modalCancel} onClick={cancelMainnet}>
-                Cancel
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`${styles.mobileLink} ${isActive(link.href) ? styles.mobileLinkActive : ""}`}
+                >
+                  <span className={styles.navGlyph}>{link.glyph}</span>
+                  {link.label}
+                </Link>
+              ))}
+              <button className={styles.mobileWalletBtn} onClick={handleWalletClick}>
+                {connected && publicKey
+                  ? `Disconnect (${truncateAddress(publicKey.toBase58())})`
+                  : "Connect Wallet"}
               </button>
-              <button className={styles.modalConfirm} onClick={confirmMainnet}>
-                🔴 Switch to Mainnet
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
 
-      {/* Mainnet Banner */}
-      {network === "mainnet-beta" && (
-        <div className={styles.mainnetBanner}>
-          <span>⚠️</span>
-          <span>
-            <strong>MAINNET</strong> — All transactions use real SOL and are irreversible
-          </span>
-          <button
-            className={styles.bannerDismiss}
-            onClick={() => setNetwork("devnet")}
+      <AnimatePresence>
+        {showMainnetWarning && (
+          <motion.div
+            className={styles.modalOverlay}
+            onClick={cancelMainnet}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            Switch to Devnet
-          </button>
-        </div>
-      )}
+            <motion.div
+              className={styles.modalContent}
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 24, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.97 }}
+              transition={{ duration: 0.22, ease: smoothEase }}
+            >
+              <div className={styles.modalIcon}>!</div>
+              <h3 className={styles.modalTitle}>Switch to Mainnet?</h3>
+              <p className={styles.modalText}>
+                You are about to switch to <strong>Solana Mainnet-Beta</strong>.
+                All transactions will use <strong>real SOL</strong> and are
+                <strong> irreversible</strong>.
+              </p>
+              <ul className={styles.modalList}>
+                <li>Posting jobs will escrow real SOL</li>
+                <li>Node registration requires real SOL stake</li>
+                <li>Settlements transfer real SOL between wallets</li>
+              </ul>
+              <div className={styles.modalActions}>
+                <button className={styles.modalCancel} onClick={cancelMainnet}>
+                  Cancel
+                </button>
+                <button className={styles.modalConfirm} onClick={confirmMainnet}>
+                  Switch to Mainnet
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {network === "mainnet-beta" && (
+          <motion.div
+            className={styles.mainnetBanner}
+            initial={{ y: -18, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -18, opacity: 0 }}
+          >
+            <span className={styles.bannerMark}>!</span>
+            <span>
+              <strong>MAINNET</strong> - All transactions use real SOL and are irreversible
+            </span>
+            <button
+              className={styles.bannerDismiss}
+              onClick={() => setNetwork("devnet")}
+            >
+              Switch to Devnet
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

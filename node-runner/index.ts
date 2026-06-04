@@ -27,7 +27,7 @@ import * as crypto from "crypto";
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 
-const PROGRAM_ID = new PublicKey("G1DD7C4pqE59RqM8gAr4yjBBNj9DZ5XHyDRCsvFv7UP5");
+const PROGRAM_ID = new PublicKey("98dhPTAR11Ny67CgS5HRSZEA9naWb6wszygiu8Q43m5K");
 
 const CLUSTERS: Record<string, string> = {
   devnet: "https://api.devnet.solana.com",
@@ -45,135 +45,77 @@ interface NodeRunnerConfig {
   maxConcurrentJobs: number;
 }
 
-// ─── IDL (minimal inline — just the parts we need) ──────────────────────────
-// In production, this would be imported from the generated IDL file
-const AXIOM_IDL = {
-  version: "0.1.0",
-  name: "axiom",
-  instructions: [
-    {
-      name: "commitResult",
-      accounts: [
-        { name: "job", isMut: true, isSigner: false },
-        { name: "nodeRegistry", isMut: false, isSigner: false },
-        { name: "operator", isMut: false, isSigner: true },
-      ],
-      args: [{ name: "commitHash", type: { array: ["u8", 32] } }],
-    },
-    {
-      name: "revealResult",
-      accounts: [
-        { name: "job", isMut: true, isSigner: false },
-        { name: "operator", isMut: false, isSigner: true },
-      ],
-      args: [
-        { name: "outputCid", type: { array: ["u8", 32] } },
-        { name: "secret", type: { array: ["u8", 32] } },
-      ],
-    },
-    {
-      name: "settleJob",
-      accounts: [
-        { name: "job", isMut: true, isSigner: false },
-        { name: "nodeRegistry", isMut: true, isSigner: false },
-        { name: "platformConfig", isMut: false, isSigner: false },
-        { name: "nodeOperator", isMut: true, isSigner: false },
-        { name: "admin", isMut: true, isSigner: false },
-        { name: "caller", isMut: false, isSigner: true },
-        { name: "systemProgram", isMut: false, isSigner: false },
-      ],
-      args: [],
-    },
-  ],
-  accounts: [
-    {
-      name: "Job",
-      type: {
-        kind: "struct",
-        fields: [
-          { name: "client", type: "publicKey" },
-          { name: "jobId", type: "u64" },
-          { name: "modelId", type: { array: ["u8", 32] } },
-          { name: "inputCid", type: { array: ["u8", 32] } },
-          { name: "bountyLamports", type: "u64" },
-          { name: "status", type: { defined: "JobStatus" } },
-          { name: "nodeOperator", type: "publicKey" },
-          { name: "commitHash", type: { array: ["u8", 32] } },
-          { name: "outputCid", type: { array: ["u8", 32] } },
-          { name: "secret", type: { array: ["u8", 32] } },
-          { name: "deadline", type: "i64" },
-          { name: "createdAt", type: "i64" },
-          { name: "isVerificationTarget", type: "bool" },
-          { name: "bump", type: "u8" },
-        ],
-      },
-    },
-    {
-      name: "NodeRegistry",
-      type: {
-        kind: "struct",
-        fields: [
-          { name: "operator", type: "publicKey" },
-          { name: "stakeAmount", type: "u64" },
-          { name: "modelsSupported", type: { vec: { array: ["u8", 32] } } },
-          { name: "jobsCompleted", type: "u64" },
-          { name: "jobsFailed", type: "u64" },
-          { name: "reputation", type: "u16" },
-          { name: "status", type: { defined: "NodeStatus" } },
-          { name: "registeredAt", type: "i64" },
-          { name: "totalEarned", type: "u64" },
-          { name: "bump", type: "u8" },
-        ],
-      },
-    },
-    {
-      name: "PlatformConfig",
-      type: {
-        kind: "struct",
-        fields: [
-          { name: "admin", type: "publicKey" },
-          { name: "minStake", type: "u64" },
-          { name: "platformFeeBps", type: "u16" },
-          { name: "verificationRateBps", type: "u16" },
-          { name: "slashPenaltyBps", type: "u16" },
-          { name: "totalJobs", type: "u64" },
-          { name: "totalVolume", type: "u64" },
-          { name: "totalNodes", type: "u64" },
-          { name: "bump", type: "u8" },
-        ],
-      },
-    },
-  ],
-  types: [
-    {
-      name: "JobStatus",
-      type: {
-        kind: "enum",
-        variants: [
-          { name: "Open" },
-          { name: "Committed" },
-          { name: "Revealed" },
-          { name: "Settled" },
-          { name: "Disputed" },
-          { name: "Expired" },
-        ],
-      },
-    },
-    {
-      name: "NodeStatus",
-      type: {
-        kind: "enum",
-        variants: [
-          { name: "Active" },
-          { name: "Slashed" },
-          { name: "Inactive" },
-        ],
-      },
-    },
-  ],
-  errors: [],
-  metadata: { address: "G1DD7C4pqE59RqM8gAr4yjBBNj9DZ5XHyDRCsvFv7UP5" },
-};
+// ─── IDL ─────────────────────────────────────────────────────────────────────
+// Load the full IDL from the JSON file (same one used by the web app)
+// Anchor 0.30+ uses a new IDL format, so we convert at runtime.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AXIOM_IDL_RAW = require("./axiom.json");
+
+function convertOldIdlToNew(oldIdl: any): any {
+  // Compute discriminator: SHA256("<namespace>:<name>")[0..8]
+  const disc = (namespace: string, name: string): number[] => {
+    const snakeName = name.replace(/([A-Z])/g, (m, c, i) => (i > 0 ? "_" : "") + c.toLowerCase());
+    const hash = crypto.createHash("sha256").update(`${namespace}:${snakeName}`).digest();
+    return Array.from(hash.slice(0, 8));
+  };
+
+  // Fix old IDL type format to new Anchor 0.30+ format:
+  // - { defined: "TypeName" } → { defined: { name: "TypeName" } }
+  // - "publicKey" → "pubkey"
+  const TYPE_MAP: Record<string, string> = { publicKey: "pubkey" };
+  const fixType = (obj: any): any => {
+    if (typeof obj === 'string') return TYPE_MAP[obj] || obj;
+    if (Array.isArray(obj)) return obj.map(fixType);
+    if (obj !== null && typeof obj === 'object') {
+      const newObj: any = {};
+      for (const [k, v] of Object.entries(obj)) {
+        if (k === 'defined' && typeof v === 'string') {
+          newObj[k] = { name: v };
+        } else if (k === 'type' && typeof v === 'string') {
+          newObj[k] = TYPE_MAP[v as string] || v;
+        } else {
+          newObj[k] = fixType(v);
+        }
+      }
+      return newObj;
+    }
+    return obj;
+  };
+
+  // Convert instructions — add discriminators
+  const instructions = (oldIdl.instructions || []).map((ix: any) => ({
+    ...fixType(ix),
+    discriminator: disc("global", ix.name),
+  }));
+
+  // Convert accounts — in old format, accounts have inline type defs.
+  // In new format, accounts just have { name, discriminator } and types hold the defs.
+  const accounts = (oldIdl.accounts || []).map((acc: any) => ({
+    name: acc.name,
+    discriminator: disc("account", acc.name),
+  }));
+
+  // Merge account type defs + existing types into a single types array
+  const accountTypes = (oldIdl.accounts || []).map((acc: any) => fixType({
+    name: acc.name,
+    type: acc.type,
+  }));
+  const existingTypes = (oldIdl.types || []).map((t: any) => fixType(t));
+  const types = [...accountTypes, ...existingTypes];
+
+  return {
+    address: oldIdl.metadata?.address || PROGRAM_ID.toBase58(),
+    metadata: oldIdl.metadata || {},
+    name: oldIdl.name || "axiom",
+    version: oldIdl.version || "0.1.0",
+    instructions,
+    accounts,
+    types,
+    errors: (oldIdl.errors || []).map((e: any) => ({ ...e })),
+  };
+}
+
+const AXIOM_IDL = convertOldIdlToNew(AXIOM_IDL_RAW);
 
 // ─── PDA Derivation ─────────────────────────────────────────────────────────
 
@@ -231,32 +173,29 @@ async function runInference(modelId: number[], inputCid: number[]): Promise<stri
     const processingTime = 1000 + Math.random() * 3000;
     await sleep(processingTime);
     
-    return `Simulated generic result. Install Ollama to see real inferences!`;
+    // Generate a simulated response
+    const responses: Record<string, string[]> = {
+      "llama-2-7b": [
+        "Based on my analysis, this demonstrates the power of decentralized computation on Solana.",
+        "The key insight is that trustless verification through commit-reveal schemes enables honest computation markets.",
+      ],
+      "codellama-13b": [
+        "```rust\nfn process_inference(input: &[u8]) -> Result<Vec<u8>> {\n    let model = load_model()?;\n    model.forward(input)\n}\n```",
+      ],
+      "stable-diff-xl": [
+        "[Image generated: 1024x1024, 50 steps, guidance=7.5]",
+      ],
+      "mistral-7b": [
+        "Decentralized AI inference enables censorship-resistant, verifiable computation at scale.",
+      ],
+      "whisper-large": [
+        "[Transcription: Audio processed, 98.7% confidence, English detected]",
+      ],
+    };
+
+    const modelResponses = responses[modelName] || responses["llama-2-7b"];
+    return modelResponses[Math.floor(Math.random() * modelResponses.length)]!;
   }
-}
-
-  // Generate a simulated response
-  const responses: Record<string, string[]> = {
-    "llama-2-7b": [
-      "Based on my analysis, this demonstrates the power of decentralized computation on Solana.",
-      "The key insight is that trustless verification through commit-reveal schemes enables honest computation markets.",
-    ],
-    "codellama-13b": [
-      "```rust\nfn process_inference(input: &[u8]) -> Result<Vec<u8>> {\n    let model = load_model()?;\n    model.forward(input)\n}\n```",
-    ],
-    "stable-diff-xl": [
-      "[Image generated: 1024x1024, 50 steps, guidance=7.5]",
-    ],
-    "mistral-7b": [
-      "Decentralized AI inference enables censorship-resistant, verifiable computation at scale.",
-    ],
-    "whisper-large": [
-      "[Transcription: Audio processed, 98.7% confidence, English detected]",
-    ],
-  };
-
-  const modelResponses = responses[modelName] || responses["llama-2-7b"];
-  return modelResponses[Math.floor(Math.random() * modelResponses.length)]!;
 }
 
 // ─── Commit-Reveal Utilities ─────────────────────────────────────────────────
@@ -343,7 +282,7 @@ class AxiomNodeRunner {
       commitment: "confirmed",
     });
 
-    this.program = new Program(AXIOM_IDL as any, this.provider);
+    this.program = new Program(AXIOM_IDL, this.provider);
   }
 
   get operatorKey(): PublicKey {
